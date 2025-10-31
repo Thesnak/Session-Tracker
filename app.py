@@ -417,15 +417,69 @@ else:
 
         st.warning("⚠️ Use carefully!")
 
-        st.subheader("Delete a Session")
-        session_options = [f"{s['date']} - {s['academy']} - {s['group']} ({s['hours']}hrs)"
-                           for s in st.session_state.sessions]
+        # Edit session
+        st.subheader("✏️ Edit a Session")
+        session_options = [f"{i}: {s['date']} - {s['academy']} - {s['group']} ({s['hours']}hrs)"
+                           for i, s in enumerate(st.session_state.sessions)]
 
         if session_options:
-            session_to_delete = st.selectbox("Select session", session_options)
+            session_to_edit = st.selectbox("Select session to edit", session_options, key="edit_selector")
+
+            if session_to_edit:
+                index = int(session_to_edit.split(":")[0])
+                session = st.session_state.sessions[index]
+
+                with st.form("edit_session_form"):
+                    st.markdown("**Edit Session Details:**")
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        edit_academy = st.text_input("Academy*", value=session['academy'])
+                        edit_group = st.text_input("Group*", value=session['group'])
+                        edit_date = st.date_input("Date*", value=pd.to_datetime(session['date']))
+
+                    with col2:
+                        edit_hours = st.number_input("Hours*", min_value=0.5, max_value=12.0,
+                                                     value=float(session['hours']), step=0.5)
+                        edit_rate = st.number_input("Hourly Rate (EGP)*", min_value=0.0,
+                                                    value=float(session['rate']), step=50.0)
+                        edit_notes = st.text_area("Notes", value=session.get('notes', ''))
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        save_btn = st.form_submit_button("💾 Save Changes", use_container_width=True)
+                    with col2:
+                        cancel_btn = st.form_submit_button("❌ Cancel", use_container_width=True)
+
+                    if save_btn:
+                        if edit_academy and edit_group:
+                            st.session_state.sessions[index] = {
+                                "academy": edit_academy,
+                                "group": edit_group,
+                                "date": edit_date.strftime("%Y-%m-%d"),
+                                "hours": edit_hours,
+                                "rate": edit_rate,
+                                "amount": edit_hours * edit_rate,
+                                "notes": edit_notes
+                            }
+                            save_sessions()
+                            st.success("✅ Session updated!")
+                            st.rerun()
+                        else:
+                            st.error("⚠️ Fill required fields!")
+
+        st.markdown("---")
+
+        # Delete session
+        st.subheader("🗑️ Delete a Session")
+        session_options_delete = [f"{i}: {s['date']} - {s['academy']} - {s['group']} ({s['hours']}hrs)"
+                                  for i, s in enumerate(st.session_state.sessions)]
+
+        if session_options_delete:
+            session_to_delete = st.selectbox("Select session to delete", session_options_delete, key="delete_selector")
 
             if st.button("🗑️ Delete Selected", type="secondary"):
-                index = session_options.index(session_to_delete)
+                index = int(session_to_delete.split(":")[0])
                 st.session_state.sessions.pop(index)
                 save_sessions()
                 st.success("Deleted!")
@@ -442,5 +496,4 @@ else:
             st.rerun()
 
 st.markdown("---")
-
 st.markdown("💡 **Cloud-enabled** • Data syncs automatically • Access from any device")

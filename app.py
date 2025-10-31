@@ -442,4 +442,5 @@ else:
             st.rerun()
 
 st.markdown("---")
+
 st.markdown("💡 **Cloud-enabled** • Data syncs automatically • Access from any device")

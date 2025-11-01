@@ -22,6 +22,7 @@ def hash_password(password):
 def load_users():
     try:
         with open(USERS_FILE, 'r') as f:
+            st.text(f.readlines())
             return json.load(f)
     except FileNotFoundError:
         return {}
